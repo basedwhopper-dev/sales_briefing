@@ -18,7 +18,6 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: none; /* Hidden initially */
         }
         h1 {
             color: #333;
@@ -117,183 +116,93 @@
             border-radius: 3px;
             font-size: 12px;
             z-index: 1000;
-        }
-        .status-success {
             background: #28a745;
             color: white;
         }
-        .status-error {
-            background: #dc3545;
-            color: white;
-        }
-        .status-warning {
-            background: #ffc107;
-            color: black;
-        }
-        .status-info {
-            background: #17a2b8;
-            color: white;
-        }
-        /* Floating window simulation */
-        .floating-window {
+        /* If in Pipedrive, create an alert-style popup */
+        .pipedrive-popup {
             position: fixed;
-            top: 50px;
-            right: 50px;
-            width: 650px;
-            height: 600px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 700px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 10000;
-            display: none;
-            overflow: auto;
+            border: 3px solid #007bff;
+            border-radius: 10px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
+            z-index: 999999;
+            max-height: 90vh;
+            overflow-y: auto;
         }
-        .floating-window.active {
-            display: block;
-        }
-        .floating-header {
+        .popup-header {
             background: #007bff;
             color: white;
-            padding: 10px 15px;
-            border-radius: 8px 8px 0 0;
+            padding: 15px 20px;
+            margin: 0;
+            border-radius: 7px 7px 0 0;
             display: flex;
-            justify-content: space-between;
+            justify-content: between;
             align-items: center;
         }
-        .floating-header h2 {
-            margin: 0;
-            font-size: 16px;
-        }
-        .floating-close {
+        .popup-close {
             background: none;
             border: none;
             color: white;
-            font-size: 18px;
+            font-size: 24px;
+            font-weight: bold;
             cursor: pointer;
-            padding: 0;
-            width: 25px;
-            height: 25px;
+            float: right;
+            margin-left: auto;
         }
-        .floating-content {
+        .popup-content {
             padding: 20px;
-            max-height: 520px;
-            overflow-y: auto;
         }
     </style>
 </head>
 <body>
-    <div id="statusIndicator" class="status-indicator status-info">Initializing...</div>
+    <div id="statusIndicator" class="status-indicator">Ready</div>
     
-    <!-- Floating window overlay -->
-    <div id="floatingWindow" class="floating-window">
-        <div class="floating-header">
-            <h2>📊 Vertriebspartner Briefing</h2>
-            <button class="floating-close" onclick="closeFloatingWindow()">×</button>
-        </div>
-        <div class="floating-content">
-            <div class="date-selector">
-                <label>Zeitraum auswählen:</label>
-                <input type="date" id="startDate" value="2025-01-01">
-                <span>bis</span>
-                <input type="date" id="endDate" value="2025-03-31">
-                <button onclick="updateData()" style="padding: 8px 15px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Aktualisieren</button>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-number" id="leads">127</span>
-                    <div class="stat-label">Leads/Interessenten</div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-number" id="firstAppointments">89</span>
-                    <div class="stat-label">1. Termine (Aufmaß)</div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-number" id="appointmentRate">70%</span>
-                    <div class="stat-label">Terminquote</div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-number" id="avgDays">3.2</span>
-                    <div class="stat-label">⌀ Tage Lead → Termin</div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-number" id="secondAppointments">45</span>
-                    <div class="stat-label">2. Termine</div>
-                </div>
-                
-                <div class="stat-card">
-                    <span class="stat-number" id="closingRate">35%</span>
-                    <div class="stat-label">Abschlussquote</div>
-                </div>
-            </div>
-
-            <div class="ranking">
-                <h3>🏆 Top 3 Verkäufer (Abschlüsse)</h3>
-                <div class="seller">
-                    <span class="seller-rank">1.</span>
-                    <span class="seller-name">Max Mustermann</span>
-                    <span class="seller-deals">23 Abschlüsse</span>
-                </div>
-                <div class="seller">
-                    <span class="seller-rank">2.</span>
-                    <span class="seller-name">Anna Schmidt</span>
-                    <span class="seller-deals">19 Abschlüsse</span>
-                </div>
-                <div class="seller">
-                    <span class="seller-rank">3.</span>
-                    <span class="seller-name">Thomas Weber</span>
-                    <span class="seller-deals">15 Abschlüsse</span>
-                </div>
-            </div>
-
-            <button class="close-btn" onclick="closeFloatingWindow()">Verstanden ✓</button>
-        </div>
-    </div>
-    
-    <!-- Regular container for standalone mode -->
+    <!-- Show content directly in Pipedrive as centered popup -->
     <div class="container">
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
         
         <div class="date-selector">
             <label>Zeitraum auswählen:</label>
-            <input type="date" id="startDate2" value="2025-01-01">
+            <input type="date" id="startDate" value="2025-01-01">
             <span>bis</span>
-            <input type="date" id="endDate2" value="2025-03-31">
+            <input type="date" id="endDate" value="2025-03-31">
             <button onclick="updateData()" style="padding: 8px 15px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Aktualisieren</button>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-number">127</span>
+                <span class="stat-number" id="leads">127</span>
                 <div class="stat-label">Leads/Interessenten</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number">89</span>
+                <span class="stat-number" id="firstAppointments">89</span>
                 <div class="stat-label">1. Termine (Aufmaß)</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number">70%</span>
+                <span class="stat-number" id="appointmentRate">70%</span>
                 <div class="stat-label">Terminquote</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number">3.2</span>
+                <span class="stat-number" id="avgDays">3.2</span>
                 <div class="stat-label">⌀ Tage Lead → Termin</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number">45</span>
+                <span class="stat-number" id="secondAppointments">45</span>
                 <div class="stat-label">2. Termine</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number">35%</span>
+                <span class="stat-number" id="closingRate">35%</span>
                 <div class="stat-label">Abschlussquote</div>
             </div>
         </div>
@@ -321,82 +230,33 @@
     </div>
 
     <script>
-        let isInPipedriveContext = false;
-        let pipedriveData = {};
+        // Check if we're in Pipedrive
+        const urlParams = new URLSearchParams(window.location.search);
+        const isInPipedrive = urlParams.has('userId') && urlParams.has('token');
         
-        // Extract Pipedrive context and data
-        function initializePipedriveContext() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const hasUserId = urlParams.has('userId');
-            const hasCompanyId = urlParams.has('companyId');
-            const hasToken = urlParams.has('token');
+        console.log('Pipedrive context:', {
+            isInPipedrive,
+            hasUserId: urlParams.has('userId'),
+            hasToken: urlParams.has('token'),
+            url: window.location.href
+        });
+        
+        if (isInPipedrive) {
+            // Style as popup overlay when in Pipedrive
+            document.querySelector('.container').className = 'pipedrive-popup';
+            document.querySelector('h1').innerHTML = '<button class="popup-close" onclick="closeWindow()">×</button>📊 Briefing für PipeDrive - Vertriebspartner Steuerung';
+            document.querySelector('h1').className = 'popup-header';
             
-            isInPipedriveContext = hasUserId && hasCompanyId && hasToken;
-            
-            if (isInPipedriveContext) {
-                pipedriveData = {
-                    userId: urlParams.get('userId'),
-                    companyId: urlParams.get('companyId'),
-                    token: urlParams.get('token'),
-                    theme: urlParams.get('theme') || 'light'
-                };
-            }
-            
-            console.log('Pipedrive context:', {
-                isInPipedriveContext,
-                hasUserId,
-                hasCompanyId,
-                hasToken: !!urlParams.get('token')
-            });
-            
-            return isInPipedriveContext;
+            // Show alert to make sure it's visible
+            setTimeout(() => {
+                alert('Sales Briefing Dashboard loaded! Check the popup window.');
+            }, 1000);
         }
         
-        // Show floating window (simulated)
-        function showFloatingWindow() {
-            const floatingWindow = document.getElementById('floatingWindow');
-            floatingWindow.classList.add('active');
-            
-            // Try to communicate with parent Pipedrive window
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    type: 'PIPEDRIVE_APP_EVENT',
-                    action: 'FLOATING_WINDOW_SHOWN',
-                    data: { trigger: 'auto_login' }
-                }, '*');
-            }
-            
-            console.log('Floating window shown');
-        }
-        
-        // Close floating window
-        function closeFloatingWindow() {
-            const floatingWindow = document.getElementById('floatingWindow');
-            floatingWindow.classList.remove('active');
-            
-            // Notify parent window
-            if (window.parent && window.parent !== window) {
-                window.parent.postMessage({
-                    type: 'PIPEDRIVE_APP_EVENT',
-                    action: 'FLOATING_WINDOW_CLOSED',
-                    data: { action: 'user_close' }
-                }, '*');
-            }
-            
-            console.log('Floating window closed');
-        }
-        
-        // Legacy close function for regular mode
-        function closeWindow() {
-            alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
-        }
-        
-        // Sample data update function
         function updateData() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             
-            // Simulate data update with random values
             document.getElementById('leads').textContent = Math.floor(Math.random() * 200) + 50;
             document.getElementById('firstAppointments').textContent = Math.floor(Math.random() * 100) + 30;
             document.getElementById('appointmentRate').textContent = Math.floor(Math.random() * 40 + 50) + '%';
@@ -407,68 +267,22 @@
             alert(`Daten aktualisiert für Zeitraum: ${startDate} bis ${endDate}`);
         }
         
-        // Set current month as default
+        function closeWindow() {
+            document.querySelector('.container').style.display = 'none';
+            alert('Briefing geschlossen!');
+        }
+        
+        // Set current month
         function setCurrentMonth() {
             const now = new Date();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
             const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
             
-            const startDateEl = document.getElementById('startDate');
-            const endDateEl = document.getElementById('endDate');
-            const startDateEl2 = document.getElementById('startDate2');
-            const endDateEl2 = document.getElementById('endDate2');
-            
-            if (startDateEl) startDateEl.value = firstDay.toISOString().split('T')[0];
-            if (endDateEl) endDateEl.value = lastDay.toISOString().split('T')[0];
-            if (startDateEl2) startDateEl2.value = firstDay.toISOString().split('T')[0];
-            if (endDateEl2) endDateEl2.value = lastDay.toISOString().split('T')[0];
+            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
         }
         
-        // Listen for messages from parent window
-        window.addEventListener('message', function(event) {
-            console.log('Received message:', event.data);
-            
-            if (event.data.type === 'PIPEDRIVE_COMMAND') {
-                switch(event.data.action) {
-                    case 'SHOW_FLOATING_WINDOW':
-                        showFloatingWindow();
-                        break;
-                    case 'HIDE_FLOATING_WINDOW':
-                        closeFloatingWindow();
-                        break;
-                }
-            }
-        });
-        
-        // Main initialization
-        (function() {
-            const statusEl = document.getElementById('statusIndicator');
-            
-            if (initializePipedriveContext()) {
-                // In Pipedrive context
-                statusEl.textContent = 'Pipedrive context - showing floating window';
-                statusEl.className = 'status-indicator status-success';
-                
-                // Show floating window immediately
-                setTimeout(() => {
-                    showFloatingWindow();
-                    statusEl.style.display = 'none';
-                }, 500);
-                
-            } else {
-                // Standalone mode
-                statusEl.textContent = 'Standalone mode';
-                statusEl.className = 'status-indicator status-warning';
-                document.querySelector('.container').style.display = 'block';
-                
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 2000);
-            }
-            
-            // Set default dates
-            setCurrentMonth();
-        })();
+        setCurrentMonth();
     </script>
 </body>
 </html>
