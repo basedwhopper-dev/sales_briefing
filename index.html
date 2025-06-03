@@ -18,11 +18,13 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin: 0 auto;
         }
         h1 {
             color: #333;
             margin-bottom: 20px;
             font-size: 18px;
+            text-align: center;
         }
         .date-selector {
             margin-bottom: 20px;
@@ -100,10 +102,13 @@
             background: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 15px 30px;
             border-radius: 5px;
             cursor: pointer;
             margin-top: 20px;
+            font-size: 16px;
+            width: 100%;
+            transition: background 0.3s;
         }
         .close-btn:hover {
             background: #0056b3;
@@ -112,59 +117,43 @@
             position: fixed;
             top: 10px;
             right: 10px;
-            padding: 5px 10px;
-            border-radius: 3px;
+            padding: 8px 12px;
+            border-radius: 4px;
             font-size: 12px;
             z-index: 1000;
             background: #28a745;
             color: white;
         }
-        /* If in Pipedrive, create an alert-style popup */
-        .pipedrive-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 700px;
-            background: white;
-            border: 3px solid #007bff;
-            border-radius: 10px;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.5);
-            z-index: 999999;
-            max-height: 90vh;
-            overflow-y: auto;
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
         }
-        .popup-header {
-            background: #007bff;
-            color: white;
-            padding: 15px 20px;
-            margin: 0;
-            border-radius: 7px 7px 0 0;
-            display: flex;
-            justify-content: between;
-            align-items: center;
-        }
-        .popup-close {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            cursor: pointer;
-            float: right;
-            margin-left: auto;
-        }
-        .popup-content {
-            padding: 20px;
+        .welcome-message {
+            background: #e7f3ff;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #007bff;
         }
     </style>
 </head>
 <body>
-    <div id="statusIndicator" class="status-indicator">Ready</div>
+    <div id="statusIndicator" class="status-indicator">Briefing geladen ✓</div>
     
-    <!-- Show content directly in Pipedrive as centered popup -->
-    <div class="container">
+    <div id="loadingScreen" class="loading">
+        <h2>📊 Lade Vertriebsbriefing...</h2>
+        <p>Einen Moment bitte...</p>
+    </div>
+
+    <div id="mainContent" class="container" style="display: none;">
+        <div class="welcome-message">
+            <strong>Willkommen zum täglichen Vertriebsbriefing!</strong><br>
+            Hier finden Sie die wichtigsten Kennzahlen für Ihr Team.
+        </div>
+
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
         
         <div class="date-selector">
@@ -226,37 +215,66 @@
             </div>
         </div>
 
-        <button class="close-btn" onclick="closeWindow()">Verstanden ✓</button>
+        <button class="close-btn" onclick="returnToPipedrive()">Verstanden ✓ - Zurück zu Pipedrive</button>
     </div>
 
     <script>
-        // Check if we're in Pipedrive
+        // Get Pipedrive context from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const isInPipedrive = urlParams.has('userId') && urlParams.has('token');
+        const userId = urlParams.get('userId');
+        const companyId = urlParams.get('companyId');
+        const token = urlParams.get('token');
+        const isInPipedrive = userId && companyId && token;
         
         console.log('Pipedrive context:', {
             isInPipedrive,
-            hasUserId: urlParams.has('userId'),
-            hasToken: urlParams.has('token'),
-            url: window.location.href
+            userId: userId || 'Not provided',
+            companyId: companyId || 'Not provided', 
+            hasToken: !!token
         });
-        
-        if (isInPipedrive) {
-            // Style as popup overlay when in Pipedrive
-            document.querySelector('.container').className = 'pipedrive-popup';
-            document.querySelector('h1').innerHTML = '<button class="popup-close" onclick="closeWindow()">×</button>📊 Briefing für PipeDrive - Vertriebspartner Steuerung';
-            document.querySelector('h1').className = 'popup-header';
-            
-            // Show alert to make sure it's visible
-            setTimeout(() => {
-                alert('Sales Briefing Dashboard loaded! Check the popup window.');
-            }, 1000);
+
+        // Function to return to Pipedrive
+        function returnToPipedrive() {
+            if (isInPipedrive) {
+                // Mark briefing as seen to prevent re-triggering today
+                const today = new Date().toDateString();
+                localStorage.setItem(`briefing_seen_${userId}`, today);
+                
+                // Show confirmation
+                alert('Briefing abgeschlossen! Sie werden zu Pipedrive zurückgeleitet.');
+                
+                // Redirect back to Pipedrive main pipeline
+                window.location.href = `https://app.pipedrive.com/pipeline/42/user/everyone`;
+            } else {
+                // Standalone mode
+                alert('Briefing abgeschlossen! Sie können dieses Fenster jetzt schließen.');
+            }
         }
-        
+
+        // Check if briefing was already seen today
+        function checkIfAlreadySeen() {
+            if (isInPipedrive) {
+                const today = new Date().toDateString();
+                const lastSeen = localStorage.getItem(`briefing_seen_${userId}`);
+                
+                if (lastSeen === today) {
+                    console.log('Briefing already seen today, redirecting...');
+                    // Auto-redirect if already seen today
+                    setTimeout(() => {
+                        window.location.href = `https://app.pipedrive.com/pipeline/42/user/everyone`;
+                    }, 1000);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Sample data update function
         function updateData() {
             const startDate = document.getElementById('startDate').value;
             const endDate = document.getElementById('endDate').value;
             
+            // Simulate data update with random values
             document.getElementById('leads').textContent = Math.floor(Math.random() * 200) + 50;
             document.getElementById('firstAppointments').textContent = Math.floor(Math.random() * 100) + 30;
             document.getElementById('appointmentRate').textContent = Math.floor(Math.random() * 40 + 50) + '%';
@@ -266,13 +284,8 @@
             
             alert(`Daten aktualisiert für Zeitraum: ${startDate} bis ${endDate}`);
         }
-        
-        function closeWindow() {
-            document.querySelector('.container').style.display = 'none';
-            alert('Briefing geschlossen!');
-        }
-        
-        // Set current month
+
+        // Set current month as default
         function setCurrentMonth() {
             const now = new Date();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -281,8 +294,37 @@
             document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
             document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
         }
+
+        // Initialize the page
+        function initializePage() {
+            // Check if already seen today
+            if (checkIfAlreadySeen()) {
+                return; // Will redirect automatically
+            }
+
+            // Show loading for 1 second, then show content
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                
+                // Hide status indicator after 3 seconds
+                setTimeout(() => {
+                    const statusEl = document.getElementById('statusIndicator');
+                    if (statusEl) {
+                        statusEl.style.display = 'none';
+                    }
+                }, 3000);
+            }, 1000);
+
+            // Set default dates
+            setCurrentMonth();
+        }
+
+        // Start initialization when page loads
+        window.addEventListener('load', initializePage);
         
-        setCurrentMonth();
+        // Also initialize immediately (fallback)
+        initializePage();
     </script>
 </body>
 </html>
