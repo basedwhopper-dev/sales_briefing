@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vertriebspartner Briefing</title>
-    <!-- Pipedrive SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
+    <!-- Multiple SDK sources for better reliability -->
+    <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@latest/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@pipedrive/app-extensions-sdk@latest/dist/index.umd.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -216,6 +217,40 @@
         let sdk = null;
         let isInPipedriveContext = false;
         
+        // Enhanced SDK loading with multiple attempts and sources
+        async function loadSDK() {
+            console.log('Starting SDK load process...');
+            
+            // Try different ways the SDK might be available
+            if (window.PipedriveSDK) {
+                console.log('Found window.PipedriveSDK');
+                return window.PipedriveSDK;
+            }
+            
+            if (window.Pipedrive && window.Pipedrive.SDK) {
+                console.log('Found window.Pipedrive.SDK');
+                return window.Pipedrive.SDK;
+            }
+            
+            // Wait longer for SDK to load from CDN
+            console.log('Waiting for SDK to load...');
+            for (let i = 0; i < 100; i++) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                if (window.PipedriveSDK) {
+                    console.log(`Found PipedriveSDK after ${i * 100}ms`);
+                    return window.PipedriveSDK;
+                }
+                
+                if (window.Pipedrive && window.Pipedrive.SDK) {
+                    console.log(`Found Pipedrive.SDK after ${i * 100}ms`);
+                    return window.Pipedrive.SDK;
+                }
+            }
+            
+            throw new Error('SDK not available after 10 seconds');
+        }
+        
         // Check if we're running in Pipedrive context
         function checkPipedriveContext() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -229,7 +264,8 @@
                 hasUserId,
                 hasCompanyId, 
                 hasToken,
-                isInPipedriveContext
+                isInPipedriveContext,
+                url: window.location.href
             });
             
             return isInPipedriveContext;
@@ -242,24 +278,19 @@
             if (checkPipedriveContext()) {
                 // In Pipedrive - set up for floating window
                 document.body.classList.add('pipedrive-context');
-                statusEl.textContent = 'Pipedrive context detected - initializing SDK...';
+                statusEl.textContent = 'Pipedrive context detected - loading SDK...';
                 statusEl.className = 'status-indicator status-info';
                 
                 try {
-                    // Wait for SDK to load
-                    let attempts = 0;
-                    while (!window.PipedriveSDK && attempts < 50) {
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                        attempts++;
-                    }
+                    const SDKClass = await loadSDK();
+                    console.log('SDK loaded:', SDKClass);
                     
-                    if (!window.PipedriveSDK) {
-                        throw new Error('PipedriveSDK not loaded');
-                    }
+                    statusEl.textContent = 'SDK loaded - initializing...';
                     
                     // Initialize SDK
-                    sdk = new window.PipedriveSDK();
+                    sdk = new SDKClass();
                     await sdk.initialize();
+                    console.log('SDK initialized successfully');
                     
                     statusEl.textContent = 'SDK initialized - showing floating window...';
                     
