@@ -131,10 +131,21 @@
             background: #ffc107;
             color: black;
         }
+        .status-info {
+            background: #17a2b8;
+            color: white;
+        }
+        /* Hide content initially if in Pipedrive context */
+        .pipedrive-context .container {
+            display: none;
+        }
+        .floating-window-active .container {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <div id="statusIndicator" class="status-indicator status-warning">Initializing SDK...</div>
+    <div id="statusIndicator" class="status-indicator status-info">Checking context...</div>
     
     <div class="container">
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
@@ -203,73 +214,100 @@
 
     <script>
         let sdk = null;
+        let isInPipedriveContext = false;
         
-        // Enhanced SDK initialization with multiple fallback methods
+        // Check if we're running in Pipedrive context
+        function checkPipedriveContext() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUserId = urlParams.has('userId');
+            const hasCompanyId = urlParams.has('companyId');
+            const hasToken = urlParams.has('token');
+            
+            isInPipedriveContext = hasUserId && hasCompanyId && hasToken;
+            
+            console.log('Context check:', {
+                hasUserId,
+                hasCompanyId, 
+                hasToken,
+                isInPipedriveContext
+            });
+            
+            return isInPipedriveContext;
+        }
+        
+        // Initialize app based on context
         (async () => {
-            try {
-                console.log('Checking SDK availability...');
+            const statusEl = document.getElementById('statusIndicator');
+            
+            if (checkPipedriveContext()) {
+                // In Pipedrive - set up for floating window
+                document.body.classList.add('pipedrive-context');
+                statusEl.textContent = 'Pipedrive context detected - initializing SDK...';
+                statusEl.className = 'status-indicator status-info';
                 
-                // Wait for SDK to load properly
-                let attempts = 0;
-                while (!window.PipedriveSDK && attempts < 50) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    attempts++;
-                }
-                
-                if (!window.PipedriveSDK) {
-                    throw new Error('PipedriveSDK not loaded after 5 seconds');
-                }
-                
-                console.log('SDK found, initializing...');
-                console.log('Available SDK methods:', Object.keys(window.PipedriveSDK));
-                
-                // Try different initialization methods
-                if (typeof window.PipedriveSDK === 'function') {
+                try {
+                    // Wait for SDK to load
+                    let attempts = 0;
+                    while (!window.PipedriveSDK && attempts < 50) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        attempts++;
+                    }
+                    
+                    if (!window.PipedriveSDK) {
+                        throw new Error('PipedriveSDK not loaded');
+                    }
+                    
+                    // Initialize SDK
                     sdk = new window.PipedriveSDK();
-                } else if (window.PipedriveSDK.createSDK) {
-                    sdk = window.PipedriveSDK.createSDK();
-                } else if (window.PipedriveSDK.default) {
-                    sdk = new window.PipedriveSDK.default();
-                } else {
-                    sdk = window.PipedriveSDK;
-                }
-                
-                await sdk.initialize();
-                
-                // Update status indicator
-                const statusEl = document.getElementById('statusIndicator');
-                statusEl.textContent = 'SDK Connected ✓';
-                statusEl.className = 'status-indicator status-success';
-                
-                console.log('SDK initialized successfully');
-                
-                // Set up event listeners
-                if (sdk.listen) {
-                    sdk.listen('VISIBILITY', ({ error, data }) => {
-                        if (!error) {
-                            console.log('Visibility changed:', data);
+                    await sdk.initialize();
+                    
+                    statusEl.textContent = 'SDK initialized - showing floating window...';
+                    
+                    // Show floating window with your dashboard content
+                    await sdk.execute('SHOW_FLOATING_WINDOW', {
+                        context: { 
+                            trigger: 'auto_login',
+                            timestamp: new Date().toISOString()
                         }
                     });
+                    
+                    // Mark as floating window active
+                    document.body.classList.add('floating-window-active');
+                    
+                    statusEl.textContent = 'Floating window active ✓';
+                    statusEl.className = 'status-indicator status-success';
+                    
+                    // Hide status indicator after success
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 2000);
+                    
+                    console.log('Floating window shown successfully');
+                    
+                } catch (error) {
+                    console.error('Failed to show floating window:', error);
+                    statusEl.textContent = 'SDK Error - showing inline';
+                    statusEl.className = 'status-indicator status-warning';
+                    
+                    // Fallback: show dashboard inline
+                    document.body.classList.add('floating-window-active');
+                    
+                    setTimeout(() => {
+                        statusEl.style.display = 'none';
+                    }, 3000);
                 }
                 
-                // Since we're already in Pipedrive context, we're ready
-                console.log('App loaded in Pipedrive context, ready for user interaction');
+            } else {
+                // Standalone mode - show dashboard directly
+                statusEl.textContent = 'Standalone mode';
+                statusEl.className = 'status-indicator status-warning';
+                document.body.classList.add('floating-window-active');
                 
-                // Hide status indicator after success
                 setTimeout(() => {
                     statusEl.style.display = 'none';
                 }, 2000);
                 
-            } catch (error) {
-                console.error('SDK initialization failed:', error);
-                const statusEl = document.getElementById('statusIndicator');
-                statusEl.textContent = 'Standalone Mode';
-                statusEl.className = 'status-indicator status-warning';
-                
-                // Hide status after 3 seconds
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 3000);
+                console.log('Running in standalone mode');
             }
         })();
 
@@ -291,21 +329,15 @@
 
         async function closeWindow() {
             try {
-                if (sdk) {
+                if (sdk && isInPipedriveContext) {
                     // Use SDK to hide floating window
                     await sdk.execute('HIDE_FLOATING_WINDOW', {
                         context: { action: 'user_close' }
                     });
                     console.log('Floating window closed via SDK');
                 } else {
-                    // Fallback methods
-                    if (window.parent && window.parent !== window) {
-                        // Try to communicate with parent window
-                        window.parent.postMessage('close', '*');
-                    } else {
-                        // Final fallback
-                        alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
-                    }
+                    // Fallback for standalone mode
+                    alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
                 }
             } catch (error) {
                 console.error('Error closing window:', error);
