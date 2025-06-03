@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vertriebspartner Briefing</title>
+    <!-- Pipedrive SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@0/dist/index.umd.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -108,9 +110,28 @@
         .close-btn:hover {
             background: #0056b3;
         }
+        .status-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            z-index: 1000;
+        }
+        .status-success {
+            background: #28a745;
+            color: white;
+        }
+        .status-error {
+            background: #dc3545;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <div id="statusIndicator" class="status-indicator status-error">Initializing SDK...</div>
+    
     <div class="container">
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
         
@@ -177,6 +198,44 @@
     </div>
 
     <script>
+        let sdk = null;
+        
+        // Initialize Pipedrive SDK and show floating window automatically
+        (async () => {
+            try {
+                console.log('Initializing Pipedrive SDK...');
+                sdk = new window.PipedriveSDK();
+                await sdk.initialize();
+                
+                // Update status indicator
+                const statusEl = document.getElementById('statusIndicator');
+                statusEl.textContent = 'SDK Connected ✓';
+                statusEl.className = 'status-indicator status-success';
+                
+                // Auto-show floating window on app load (simulates login trigger)
+                setTimeout(async () => {
+                    try {
+                        await sdk.execute('SHOW_FLOATING_WINDOW', {
+                            context: { 
+                                trigger: 'auto_login',
+                                timestamp: new Date().toISOString()
+                            }
+                        });
+                        console.log('Floating window triggered automatically on app load');
+                    } catch (showError) {
+                        console.warn('Could not show floating window:', showError);
+                        // This is normal if we're already in a floating window
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('SDK initialization failed:', error);
+                const statusEl = document.getElementById('statusIndicator');
+                statusEl.textContent = 'SDK Error ✗';
+                statusEl.className = 'status-indicator status-error';
+            }
+        })();
+
         // Sample data update function
         function updateData() {
             const startDate = document.getElementById('startDate').value;
@@ -193,10 +252,24 @@
             alert(`Daten aktualisiert für Zeitraum: ${startDate} bis ${endDate}`);
         }
 
-        function closeWindow() {
-            // For now just hide the window
-            document.body.style.display = 'none';
-            alert('Fenster geschlossen');
+        async function closeWindow() {
+            try {
+                if (sdk) {
+                    // Use SDK to hide floating window
+                    await sdk.execute('HIDE_FLOATING_WINDOW', {
+                        context: { action: 'user_close' }
+                    });
+                    console.log('Floating window closed via SDK');
+                } else {
+                    // Fallback for testing outside Pipedrive
+                    document.body.style.display = 'none';
+                    alert('Fenster geschlossen (Fallback-Modus)');
+                }
+            } catch (error) {
+                console.error('Error closing window:', error);
+                // Fallback
+                document.body.style.display = 'none';
+            }
         }
 
         // Set current month as default
@@ -207,6 +280,20 @@
             
             document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
             document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+        }
+
+        // Listen for SDK events
+        if (typeof window.PipedriveSDK !== 'undefined') {
+            // Listen for visibility changes
+            setTimeout(() => {
+                if (sdk) {
+                    sdk.listen('VISIBILITY', ({ error, data }) => {
+                        if (!error) {
+                            console.log('Visibility changed:', data);
+                        }
+                    });
+                }
+            }, 2000);
         }
 
         // Initialize with current month
