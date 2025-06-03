@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vertriebspartner Briefing</title>
-    <!-- Multiple SDK sources for better reliability -->
-    <script src="https://cdn.jsdelivr.net/npm/@pipedrive/app-extensions-sdk@latest/dist/index.umd.js"></script>
-    <script src="https://unpkg.com/@pipedrive/app-extensions-sdk@latest/dist/index.umd.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,6 +18,7 @@
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none; /* Hidden initially */
         }
         h1 {
             color: #333;
@@ -136,57 +134,166 @@
             background: #17a2b8;
             color: white;
         }
-        /* Hide content initially if in Pipedrive context */
-        .pipedrive-context .container {
+        /* Floating window simulation */
+        .floating-window {
+            position: fixed;
+            top: 50px;
+            right: 50px;
+            width: 650px;
+            height: 600px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10000;
             display: none;
+            overflow: auto;
         }
-        .floating-window-active .container {
+        .floating-window.active {
             display: block;
+        }
+        .floating-header {
+            background: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .floating-header h2 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .floating-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 25px;
+            height: 25px;
+        }
+        .floating-content {
+            padding: 20px;
+            max-height: 520px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
-    <div id="statusIndicator" class="status-indicator status-info">Checking context...</div>
+    <div id="statusIndicator" class="status-indicator status-info">Initializing...</div>
     
+    <!-- Floating window overlay -->
+    <div id="floatingWindow" class="floating-window">
+        <div class="floating-header">
+            <h2>📊 Vertriebspartner Briefing</h2>
+            <button class="floating-close" onclick="closeFloatingWindow()">×</button>
+        </div>
+        <div class="floating-content">
+            <div class="date-selector">
+                <label>Zeitraum auswählen:</label>
+                <input type="date" id="startDate" value="2025-01-01">
+                <span>bis</span>
+                <input type="date" id="endDate" value="2025-03-31">
+                <button onclick="updateData()" style="padding: 8px 15px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Aktualisieren</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number" id="leads">127</span>
+                    <div class="stat-label">Leads/Interessenten</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number" id="firstAppointments">89</span>
+                    <div class="stat-label">1. Termine (Aufmaß)</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number" id="appointmentRate">70%</span>
+                    <div class="stat-label">Terminquote</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number" id="avgDays">3.2</span>
+                    <div class="stat-label">⌀ Tage Lead → Termin</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number" id="secondAppointments">45</span>
+                    <div class="stat-label">2. Termine</div>
+                </div>
+                
+                <div class="stat-card">
+                    <span class="stat-number" id="closingRate">35%</span>
+                    <div class="stat-label">Abschlussquote</div>
+                </div>
+            </div>
+
+            <div class="ranking">
+                <h3>🏆 Top 3 Verkäufer (Abschlüsse)</h3>
+                <div class="seller">
+                    <span class="seller-rank">1.</span>
+                    <span class="seller-name">Max Mustermann</span>
+                    <span class="seller-deals">23 Abschlüsse</span>
+                </div>
+                <div class="seller">
+                    <span class="seller-rank">2.</span>
+                    <span class="seller-name">Anna Schmidt</span>
+                    <span class="seller-deals">19 Abschlüsse</span>
+                </div>
+                <div class="seller">
+                    <span class="seller-rank">3.</span>
+                    <span class="seller-name">Thomas Weber</span>
+                    <span class="seller-deals">15 Abschlüsse</span>
+                </div>
+            </div>
+
+            <button class="close-btn" onclick="closeFloatingWindow()">Verstanden ✓</button>
+        </div>
+    </div>
+    
+    <!-- Regular container for standalone mode -->
     <div class="container">
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
         
         <div class="date-selector">
             <label>Zeitraum auswählen:</label>
-            <input type="date" id="startDate" value="2025-01-01">
+            <input type="date" id="startDate2" value="2025-01-01">
             <span>bis</span>
-            <input type="date" id="endDate" value="2025-03-31">
+            <input type="date" id="endDate2" value="2025-03-31">
             <button onclick="updateData()" style="padding: 8px 15px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Aktualisieren</button>
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-number" id="leads">127</span>
+                <span class="stat-number">127</span>
                 <div class="stat-label">Leads/Interessenten</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="firstAppointments">89</span>
+                <span class="stat-number">89</span>
                 <div class="stat-label">1. Termine (Aufmaß)</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="appointmentRate">70%</span>
+                <span class="stat-number">70%</span>
                 <div class="stat-label">Terminquote</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="avgDays">3.2</span>
+                <span class="stat-number">3.2</span>
                 <div class="stat-label">⌀ Tage Lead → Termin</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="secondAppointments">45</span>
+                <span class="stat-number">45</span>
                 <div class="stat-label">2. Termine</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="closingRate">35%</span>
+                <span class="stat-number">35%</span>
                 <div class="stat-label">Abschlussquote</div>
             </div>
         </div>
@@ -214,45 +321,11 @@
     </div>
 
     <script>
-        let sdk = null;
         let isInPipedriveContext = false;
+        let pipedriveData = {};
         
-        // Enhanced SDK loading with multiple attempts and sources
-        async function loadSDK() {
-            console.log('Starting SDK load process...');
-            
-            // Try different ways the SDK might be available
-            if (window.PipedriveSDK) {
-                console.log('Found window.PipedriveSDK');
-                return window.PipedriveSDK;
-            }
-            
-            if (window.Pipedrive && window.Pipedrive.SDK) {
-                console.log('Found window.Pipedrive.SDK');
-                return window.Pipedrive.SDK;
-            }
-            
-            // Wait longer for SDK to load from CDN
-            console.log('Waiting for SDK to load...');
-            for (let i = 0; i < 100; i++) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                if (window.PipedriveSDK) {
-                    console.log(`Found PipedriveSDK after ${i * 100}ms`);
-                    return window.PipedriveSDK;
-                }
-                
-                if (window.Pipedrive && window.Pipedrive.SDK) {
-                    console.log(`Found Pipedrive.SDK after ${i * 100}ms`);
-                    return window.Pipedrive.SDK;
-                }
-            }
-            
-            throw new Error('SDK not available after 10 seconds');
-        }
-        
-        // Check if we're running in Pipedrive context
-        function checkPipedriveContext() {
+        // Extract Pipedrive context and data
+        function initializePipedriveContext() {
             const urlParams = new URLSearchParams(window.location.search);
             const hasUserId = urlParams.has('userId');
             const hasCompanyId = urlParams.has('companyId');
@@ -260,88 +333,64 @@
             
             isInPipedriveContext = hasUserId && hasCompanyId && hasToken;
             
-            console.log('Context check:', {
-                hasUserId,
-                hasCompanyId, 
-                hasToken,
+            if (isInPipedriveContext) {
+                pipedriveData = {
+                    userId: urlParams.get('userId'),
+                    companyId: urlParams.get('companyId'),
+                    token: urlParams.get('token'),
+                    theme: urlParams.get('theme') || 'light'
+                };
+            }
+            
+            console.log('Pipedrive context:', {
                 isInPipedriveContext,
-                url: window.location.href
+                hasUserId,
+                hasCompanyId,
+                hasToken: !!urlParams.get('token')
             });
             
             return isInPipedriveContext;
         }
         
-        // Initialize app based on context
-        (async () => {
-            const statusEl = document.getElementById('statusIndicator');
+        // Show floating window (simulated)
+        function showFloatingWindow() {
+            const floatingWindow = document.getElementById('floatingWindow');
+            floatingWindow.classList.add('active');
             
-            if (checkPipedriveContext()) {
-                // In Pipedrive - set up for floating window
-                document.body.classList.add('pipedrive-context');
-                statusEl.textContent = 'Pipedrive context detected - loading SDK...';
-                statusEl.className = 'status-indicator status-info';
-                
-                try {
-                    const SDKClass = await loadSDK();
-                    console.log('SDK loaded:', SDKClass);
-                    
-                    statusEl.textContent = 'SDK loaded - initializing...';
-                    
-                    // Initialize SDK
-                    sdk = new SDKClass();
-                    await sdk.initialize();
-                    console.log('SDK initialized successfully');
-                    
-                    statusEl.textContent = 'SDK initialized - showing floating window...';
-                    
-                    // Show floating window with your dashboard content
-                    await sdk.execute('SHOW_FLOATING_WINDOW', {
-                        context: { 
-                            trigger: 'auto_login',
-                            timestamp: new Date().toISOString()
-                        }
-                    });
-                    
-                    // Mark as floating window active
-                    document.body.classList.add('floating-window-active');
-                    
-                    statusEl.textContent = 'Floating window active ✓';
-                    statusEl.className = 'status-indicator status-success';
-                    
-                    // Hide status indicator after success
-                    setTimeout(() => {
-                        statusEl.style.display = 'none';
-                    }, 2000);
-                    
-                    console.log('Floating window shown successfully');
-                    
-                } catch (error) {
-                    console.error('Failed to show floating window:', error);
-                    statusEl.textContent = 'SDK Error - showing inline';
-                    statusEl.className = 'status-indicator status-warning';
-                    
-                    // Fallback: show dashboard inline
-                    document.body.classList.add('floating-window-active');
-                    
-                    setTimeout(() => {
-                        statusEl.style.display = 'none';
-                    }, 3000);
-                }
-                
-            } else {
-                // Standalone mode - show dashboard directly
-                statusEl.textContent = 'Standalone mode';
-                statusEl.className = 'status-indicator status-warning';
-                document.body.classList.add('floating-window-active');
-                
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 2000);
-                
-                console.log('Running in standalone mode');
+            // Try to communicate with parent Pipedrive window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'PIPEDRIVE_APP_EVENT',
+                    action: 'FLOATING_WINDOW_SHOWN',
+                    data: { trigger: 'auto_login' }
+                }, '*');
             }
-        })();
-
+            
+            console.log('Floating window shown');
+        }
+        
+        // Close floating window
+        function closeFloatingWindow() {
+            const floatingWindow = document.getElementById('floatingWindow');
+            floatingWindow.classList.remove('active');
+            
+            // Notify parent window
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'PIPEDRIVE_APP_EVENT',
+                    action: 'FLOATING_WINDOW_CLOSED',
+                    data: { action: 'user_close' }
+                }, '*');
+            }
+            
+            console.log('Floating window closed');
+        }
+        
+        // Legacy close function for regular mode
+        function closeWindow() {
+            alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
+        }
+        
         // Sample data update function
         function updateData() {
             const startDate = document.getElementById('startDate').value;
@@ -357,37 +406,69 @@
             
             alert(`Daten aktualisiert für Zeitraum: ${startDate} bis ${endDate}`);
         }
-
-        async function closeWindow() {
-            try {
-                if (sdk && isInPipedriveContext) {
-                    // Use SDK to hide floating window
-                    await sdk.execute('HIDE_FLOATING_WINDOW', {
-                        context: { action: 'user_close' }
-                    });
-                    console.log('Floating window closed via SDK');
-                } else {
-                    // Fallback for standalone mode
-                    alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
-                }
-            } catch (error) {
-                console.error('Error closing window:', error);
-                alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
-            }
-        }
-
+        
         // Set current month as default
         function setCurrentMonth() {
             const now = new Date();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
             const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
             
-            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
-            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+            const startDateEl = document.getElementById('startDate');
+            const endDateEl = document.getElementById('endDate');
+            const startDateEl2 = document.getElementById('startDate2');
+            const endDateEl2 = document.getElementById('endDate2');
+            
+            if (startDateEl) startDateEl.value = firstDay.toISOString().split('T')[0];
+            if (endDateEl) endDateEl.value = lastDay.toISOString().split('T')[0];
+            if (startDateEl2) startDateEl2.value = firstDay.toISOString().split('T')[0];
+            if (endDateEl2) endDateEl2.value = lastDay.toISOString().split('T')[0];
         }
-
-        // Initialize with current month
-        setCurrentMonth();
+        
+        // Listen for messages from parent window
+        window.addEventListener('message', function(event) {
+            console.log('Received message:', event.data);
+            
+            if (event.data.type === 'PIPEDRIVE_COMMAND') {
+                switch(event.data.action) {
+                    case 'SHOW_FLOATING_WINDOW':
+                        showFloatingWindow();
+                        break;
+                    case 'HIDE_FLOATING_WINDOW':
+                        closeFloatingWindow();
+                        break;
+                }
+            }
+        });
+        
+        // Main initialization
+        (function() {
+            const statusEl = document.getElementById('statusIndicator');
+            
+            if (initializePipedriveContext()) {
+                // In Pipedrive context
+                statusEl.textContent = 'Pipedrive context - showing floating window';
+                statusEl.className = 'status-indicator status-success';
+                
+                // Show floating window immediately
+                setTimeout(() => {
+                    showFloatingWindow();
+                    statusEl.style.display = 'none';
+                }, 500);
+                
+            } else {
+                // Standalone mode
+                statusEl.textContent = 'Standalone mode';
+                statusEl.className = 'status-indicator status-warning';
+                document.querySelector('.container').style.display = 'block';
+                
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 2000);
+            }
+            
+            // Set default dates
+            setCurrentMonth();
+        })();
     </script>
 </body>
 </html>
