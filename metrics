@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertriebspartner Briefing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .date-selector {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .date-selector label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .date-selector input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            display: block;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .ranking {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .ranking h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .seller {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e0e0e0;
+        }
+        .seller-rank {
+            font-weight: bold;
+            margin-right: 15px;
+            color: #007bff;
+        }
+        .seller-name {
+            flex: 1;
+        }
+        .seller-deals {
+            font-weight: bold;
+            color: #28a745;
+        }
+        .close-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .close-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
+        
+        <div class="date-selector">
+            <label>Zeitraum auswählen:</label>
+            <input type="date" id="startDate" value="2025-01-01">
+            <span>bis</span>
+            <input type="date" id="endDate" value="2025-03-31">
+            <button onclick="updateData()" style="padding: 8px 15px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Aktualisieren</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" id="leads">127</span>
+                <div class="stat-label">Leads/Interessenten</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="firstAppointments">89</span>
+                <div class="stat-label">1. Termine (Aufmaß)</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="appointmentRate">70%</span>
+                <div class="stat-label">Terminquote</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="avgDays">3.2</span>
+                <div class="stat-label">⌀ Tage Lead → Termin</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="secondAppointments">45</span>
+                <div class="stat-label">2. Termine</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="closingRate">35%</span>
+                <div class="stat-label">Abschlussquote</div>
+            </div>
+        </div>
+
+        <div class="ranking">
+            <h3>🏆 Top 3 Verkäufer (Abschlüsse)</h3>
+            <div class="seller">
+                <span class="seller-rank">1.</span>
+                <span class="seller-name">Max Mustermann</span>
+                <span class="seller-deals">23 Abschlüsse</span>
+            </div>
+            <div class="seller">
+                <span class="seller-rank">2.</span>
+                <span class="seller-name">Anna Schmidt</span>
+                <span class="seller-deals">19 Abschlüsse</span>
+            </div>
+            <div class="seller">
+                <span class="seller-rank">3.</span>
+                <span class="seller-name">Thomas Weber</span>
+                <span class="seller-deals">15 Abschlüsse</span>
+            </div>
+        </div>
+
+        <button class="close-btn" onclick="closeWindow()">Verstanden ✓</button>
+    </div>
+
+    <script>
+        // Sample data update function
+        function updateData() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            // Simulate data update with random values
+            document.getElementById('leads').textContent = Math.floor(Math.random() * 200) + 50;
+            document.getElementById('firstAppointments').textContent = Math.floor(Math.random() * 100) + 30;
+            document.getElementById('appointmentRate').textContent = Math.floor(Math.random() * 40 + 50) + '%';
+            document.getElementById('avgDays').textContent = (Math.random() * 5 + 1).toFixed(1);
+            document.getElementById('secondAppointments').textContent = Math.floor(Math.random() * 60) + 20;
+            document.getElementById('closingRate').textContent = Math.floor(Math.random() * 30 + 20) + '%';
+            
+            alert(`Daten aktualisiert für Zeitraum: ${startDate} bis ${endDate}`);
+        }
+
+        function closeWindow() {
+            // For now just hide the window
+            document.body.style.display = 'none';
+            alert('Fenster geschlossen');
+        }
+
+        // Set current month as default
+        function setCurrentMonth() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+        }
+
+        // Initialize with current month
+        setCurrentMonth();
+    </script>
+</body>
+</html>
