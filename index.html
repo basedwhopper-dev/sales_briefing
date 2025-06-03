@@ -127,10 +127,14 @@
             background: #dc3545;
             color: white;
         }
+        .status-warning {
+            background: #ffc107;
+            color: black;
+        }
     </style>
 </head>
 <body>
-    <div id="statusIndicator" class="status-indicator status-error">Initializing SDK...</div>
+    <div id="statusIndicator" class="status-indicator status-warning">Initializing SDK...</div>
     
     <div class="container">
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
@@ -200,11 +204,36 @@
     <script>
         let sdk = null;
         
-        // Initialize Pipedrive SDK and show floating window automatically
+        // Enhanced SDK initialization with multiple fallback methods
         (async () => {
             try {
-                console.log('Initializing Pipedrive SDK...');
-                sdk = new window.PipedriveSDK();
+                console.log('Checking SDK availability...');
+                
+                // Wait for SDK to load properly
+                let attempts = 0;
+                while (!window.PipedriveSDK && attempts < 50) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    attempts++;
+                }
+                
+                if (!window.PipedriveSDK) {
+                    throw new Error('PipedriveSDK not loaded after 5 seconds');
+                }
+                
+                console.log('SDK found, initializing...');
+                console.log('Available SDK methods:', Object.keys(window.PipedriveSDK));
+                
+                // Try different initialization methods
+                if (typeof window.PipedriveSDK === 'function') {
+                    sdk = new window.PipedriveSDK();
+                } else if (window.PipedriveSDK.createSDK) {
+                    sdk = window.PipedriveSDK.createSDK();
+                } else if (window.PipedriveSDK.default) {
+                    sdk = new window.PipedriveSDK.default();
+                } else {
+                    sdk = window.PipedriveSDK;
+                }
+                
                 await sdk.initialize();
                 
                 // Update status indicator
@@ -212,27 +241,35 @@
                 statusEl.textContent = 'SDK Connected ✓';
                 statusEl.className = 'status-indicator status-success';
                 
-                // Auto-show floating window on app load (simulates login trigger)
-                setTimeout(async () => {
-                    try {
-                        await sdk.execute('SHOW_FLOATING_WINDOW', {
-                            context: { 
-                                trigger: 'auto_login',
-                                timestamp: new Date().toISOString()
-                            }
-                        });
-                        console.log('Floating window triggered automatically on app load');
-                    } catch (showError) {
-                        console.warn('Could not show floating window:', showError);
-                        // This is normal if we're already in a floating window
-                    }
-                }, 1000);
+                console.log('SDK initialized successfully');
+                
+                // Set up event listeners
+                if (sdk.listen) {
+                    sdk.listen('VISIBILITY', ({ error, data }) => {
+                        if (!error) {
+                            console.log('Visibility changed:', data);
+                        }
+                    });
+                }
+                
+                // Since we're already in Pipedrive context, we're ready
+                console.log('App loaded in Pipedrive context, ready for user interaction');
+                
+                // Hide status indicator after success
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 2000);
                 
             } catch (error) {
                 console.error('SDK initialization failed:', error);
                 const statusEl = document.getElementById('statusIndicator');
-                statusEl.textContent = 'SDK Error ✗';
-                statusEl.className = 'status-indicator status-error';
+                statusEl.textContent = 'Standalone Mode';
+                statusEl.className = 'status-indicator status-warning';
+                
+                // Hide status after 3 seconds
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
             }
         })();
 
@@ -261,14 +298,18 @@
                     });
                     console.log('Floating window closed via SDK');
                 } else {
-                    // Fallback for testing outside Pipedrive
-                    document.body.style.display = 'none';
-                    alert('Fenster geschlossen (Fallback-Modus)');
+                    // Fallback methods
+                    if (window.parent && window.parent !== window) {
+                        // Try to communicate with parent window
+                        window.parent.postMessage('close', '*');
+                    } else {
+                        // Final fallback
+                        alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
+                    }
                 }
             } catch (error) {
                 console.error('Error closing window:', error);
-                // Fallback
-                document.body.style.display = 'none';
+                alert('Briefing verstanden! Sie können dieses Fenster jetzt schließen.');
             }
         }
 
@@ -280,20 +321,6 @@
             
             document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
             document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
-        }
-
-        // Listen for SDK events
-        if (typeof window.PipedriveSDK !== 'undefined') {
-            // Listen for visibility changes
-            setTimeout(() => {
-                if (sdk) {
-                    sdk.listen('VISIBILITY', ({ error, data }) => {
-                        if (!error) {
-                            console.log('Visibility changed:', data);
-                        }
-                    });
-                }
-            }, 2000);
         }
 
         // Initialize with current month
