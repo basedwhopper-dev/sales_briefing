@@ -24,7 +24,6 @@
             color: #333;
             margin-bottom: 20px;
             font-size: 18px;
-            text-align: center;
         }
         .date-selector {
             margin-bottom: 20px;
@@ -102,229 +101,144 @@
             background: #007bff;
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             margin-top: 20px;
             font-size: 16px;
-            width: 100%;
-            transition: background 0.3s;
         }
         .close-btn:hover {
             background: #0056b3;
         }
-        .status-indicator {
+        .debug-info {
             position: fixed;
             top: 10px;
             right: 10px;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 1000;
-            background: #28a745;
+            background: rgba(0,0,0,0.8);
             color: white;
-        }
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #666;
-        }
-        .welcome-message {
-            background: #e7f3ff;
-            border: 1px solid #007bff;
+            padding: 10px;
+            font-size: 12px;
             border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-            color: #007bff;
+            max-width: 300px;
         }
     </style>
 </head>
 <body>
-    <div id="statusIndicator" class="status-indicator">Briefing geladen ✓</div>
-    
-    <div id="loadingScreen" class="loading">
-        <h2>📊 Lade Vertriebsbriefing...</h2>
-        <p>Einen Moment bitte...</p>
-    </div>
-
-    <div id="mainContent" class="container" style="display: none;">
-        <div class="welcome-message">
-            <strong>Willkommen zum täglichen Vertriebsbriefing!</strong><br>
-            Hier finden Sie die wichtigsten Kennzahlen für Ihr Team.
-        </div>
-
+    <div class="container">
         <h1>📊 Briefing für PipeDrive - Vertriebspartner Steuerung</h1>
         
         <div class="date-selector">
-            <label>Zeitraum auswählen:</label>
+            <label>📅 Zeitraum auswählen:</label>
             <input type="date" id="startDate" value="2025-01-01">
-            <span>bis</span>
-            <input type="date" id="endDate" value="2025-03-31">
-            <button onclick="updateData()" style="padding: 8px 15px; margin-left: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Aktualisieren</button>
+            <input type="date" id="endDate" value="2025-01-31">
         </div>
 
         <div class="stats-grid">
             <div class="stat-card">
-                <span class="stat-number" id="leads">127</span>
-                <div class="stat-label">Leads/Interessenten</div>
+                <span class="stat-number">247</span>
+                <div class="stat-label">💼 Leads/Interessenten</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="firstAppointments">89</span>
-                <div class="stat-label">1. Termine (Aufmaß)</div>
+                <span class="stat-number">89</span>
+                <div class="stat-label">📅 1. Termine (Aufmaß)</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="appointmentRate">70%</span>
-                <div class="stat-label">Terminquote</div>
+                <span class="stat-number">36%</span>
+                <div class="stat-label">📈 Terminquote</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="avgDays">3.2</span>
-                <div class="stat-label">⌀ Tage Lead → Termin</div>
+                <span class="stat-number">12</span>
+                <div class="stat-label">⏱️ ⌀ Tage Lead → Termin</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="secondAppointments">45</span>
-                <div class="stat-label">2. Termine</div>
+                <span class="stat-number">34</span>
+                <div class="stat-label">🔄 2. Termine</div>
             </div>
             
             <div class="stat-card">
-                <span class="stat-number" id="closingRate">35%</span>
-                <div class="stat-label">Abschlussquote</div>
+                <span class="stat-number">68%</span>
+                <div class="stat-label">💰 Abschlussquote</div>
             </div>
         </div>
 
         <div class="ranking">
             <h3>🏆 Top 3 Verkäufer (Abschlüsse)</h3>
+            
             <div class="seller">
-                <span class="seller-rank">1.</span>
-                <span class="seller-name">Max Mustermann</span>
-                <span class="seller-deals">23 Abschlüsse</span>
+                <div class="seller-rank">🥇 1.</div>
+                <div class="seller-name">Max Mustermann</div>
+                <div class="seller-deals">23 Abschlüsse</div>
             </div>
+            
             <div class="seller">
-                <span class="seller-rank">2.</span>
-                <span class="seller-name">Anna Schmidt</span>
-                <span class="seller-deals">19 Abschlüsse</span>
+                <div class="seller-rank">🥈 2.</div>
+                <div class="seller-name">Anna Schmidt</div>
+                <div class="seller-deals">19 Abschlüsse</div>
             </div>
+            
             <div class="seller">
-                <span class="seller-rank">3.</span>
-                <span class="seller-name">Thomas Weber</span>
-                <span class="seller-deals">15 Abschlüsse</span>
+                <div class="seller-rank">🥉 3.</div>
+                <div class="seller-name">Thomas Weber</div>
+                <div class="seller-deals">15 Abschlüsse</div>
             </div>
         </div>
 
-        <button class="close-btn" onclick="returnToPipedrive()">Verstanden ✓ - Zurück zu Pipedrive</button>
+        <button class="close-btn" onclick="redirectToPipedrive()">✅ Verstanden - Zurück zu PipeDrive</button>
     </div>
 
+    <!-- Debug info -->
+    <div class="debug-info" id="debugInfo" style="display: none;"></div>
+
     <script>
-        // Get Pipedrive context from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const userId = urlParams.get('userId');
-        const companyId = urlParams.get('companyId');
-        const token = urlParams.get('token');
-        const isInPipedrive = userId && companyId && token;
-        
-        console.log('Pipedrive context:', {
-            isInPipedrive,
-            userId: userId || 'Not provided',
-            companyId: companyId || 'Not provided', 
-            hasToken: !!token
-        });
+        // Get URL parameters safely
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                userId: params.get('userId'),
+                companyId: params.get('companyId'),
+                // DON'T store the token for security
+                hasToken: !!params.get('token')
+            };
+        }
 
-        // Function to return to Pipedrive
-        function returnToPipedrive() {
-            if (isInPipedrive) {
-                // Mark briefing as seen to prevent re-triggering today
-                const today = new Date().toDateString();
-                localStorage.setItem(`briefing_seen_${userId}`, today);
-                
-                // Show confirmation
-                alert('Briefing abgeschlossen! Sie werden zu Pipedrive zurückgeleitet.');
-                
-                // Redirect back to Pipedrive main pipeline
-                window.location.href = `https://app.pipedrive.com/pipeline/42/user/everyone`;
+        // Initialize
+        const urlParams = getUrlParams();
+        
+        // Show debug info
+        document.getElementById('debugInfo').innerHTML = `
+            User ID: ${urlParams.userId}<br>
+            Company ID: ${urlParams.companyId}<br>
+            Has Token: ${urlParams.hasToken}
+        `;
+        document.getElementById('debugInfo').style.display = 'block';
+
+        // Set to prevent multiple redirects
+        let hasRedirected = false;
+
+        // Secure redirect function - NO TOKEN IN URL
+        function redirectToPipedrive() {
+            if (hasRedirected) return;
+            hasRedirected = true;
+            
+            // Clean redirect - only use companyId, NO TOKEN
+            const companyId = urlParams.companyId;
+            if (companyId) {
+                // Redirect to Pipedrive main dashboard
+                window.location.href = `https://pdx.pipedrive.com/progress`;
             } else {
-                // Standalone mode
-                alert('Briefing abgeschlossen! Sie können dieses Fenster jetzt schließen.');
+                // Fallback
+                window.location.href = 'https://pdx.pipedrive.com';
             }
         }
 
-        // Check if briefing was already seen today
-        function checkIfAlreadySeen() {
-            if (isInPipedrive) {
-                const today = new Date().toDateString();
-                const lastSeen = localStorage.getItem(`briefing_seen_${userId}`);
-                
-                if (lastSeen === today) {
-                    console.log('Briefing already seen today, redirecting...');
-                    // Auto-redirect if already seen today
-                    setTimeout(() => {
-                        window.location.href = `https://app.pipedrive.com/pipeline/42/user/everyone`;
-                    }, 1000);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        // Sample data update function
-        function updateData() {
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            
-            // Simulate data update with random values
-            document.getElementById('leads').textContent = Math.floor(Math.random() * 200) + 50;
-            document.getElementById('firstAppointments').textContent = Math.floor(Math.random() * 100) + 30;
-            document.getElementById('appointmentRate').textContent = Math.floor(Math.random() * 40 + 50) + '%';
-            document.getElementById('avgDays').textContent = (Math.random() * 5 + 1).toFixed(1);
-            document.getElementById('secondAppointments').textContent = Math.floor(Math.random() * 60) + 20;
-            document.getElementById('closingRate').textContent = Math.floor(Math.random() * 30 + 20) + '%';
-            
-            alert(`Daten aktualisiert für Zeitraum: ${startDate} bis ${endDate}`);
-        }
-
-        // Set current month as default
-        function setCurrentMonth() {
-            const now = new Date();
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            
-            document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
-            document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
-        }
-
-        // Initialize the page
-        function initializePage() {
-            // Check if already seen today
-            if (checkIfAlreadySeen()) {
-                return; // Will redirect automatically
-            }
-
-            // Show loading for 1 second, then show content
-            setTimeout(() => {
-                document.getElementById('loadingScreen').style.display = 'none';
-                document.getElementById('mainContent').style.display = 'block';
-                
-                // Hide status indicator after 3 seconds
-                setTimeout(() => {
-                    const statusEl = document.getElementById('statusIndicator');
-                    if (statusEl) {
-                        statusEl.style.display = 'none';
-                    }
-                }, 3000);
-            }, 1000);
-
-            // Set default dates
-            setCurrentMonth();
-        }
-
-        // Start initialization when page loads
-        window.addEventListener('load', initializePage);
-        
-        // Also initialize immediately (fallback)
-        initializePage();
+        // Auto-hide debug after 5 seconds
+        setTimeout(() => {
+            document.getElementById('debugInfo').style.display = 'none';
+        }, 5000);
     </script>
 </body>
 </html>
